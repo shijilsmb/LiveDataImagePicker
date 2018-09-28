@@ -3,18 +3,24 @@ package com.mlsdev.rximagepicker;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MediatorLiveData;
+import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Observer;
 import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 
 import java.text.SimpleDateFormat;
@@ -23,9 +29,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import io.reactivex.Observable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.subjects.PublishSubject;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -37,10 +40,10 @@ public class RxImagePicker extends Fragment {
     private static final String TAG = RxImagePicker.class.getSimpleName();
     private static Uri cameraPictureUrl;
 
-    private PublishSubject<Boolean> attachedSubject;
-    private PublishSubject<Uri> publishSubject;
-    private PublishSubject<List<Uri>> publishSubjectMultipleImages;
-    private PublishSubject<Integer> canceledSubject;
+    private MutableLiveData<Boolean> attachedSubject;
+    private MutableLiveData<Uri> publishSubject;
+    private MutableLiveData<List<Uri>> publishSubjectMultipleImages;
+    //private MutableLiveData<Integer> canceledSubject;
 
     private boolean allowMultipleImages = false;
     private Sources imageSource;
@@ -56,25 +59,29 @@ public class RxImagePicker extends Fragment {
         return rxImagePickerFragment;
     }
 
-    public Observable<Uri> requestImage(final Sources source) {
-        publishSubject = PublishSubject.create();
-        attachedSubject = PublishSubject.create();
-        canceledSubject = PublishSubject.create();
+    public LiveData<Uri> requestImage(final Sources source) {
+    //public Observable<Uri> requestImage(final Sources source) {
+        //publishSubject = PublishSubject.create();
+        publishSubject = new MediatorLiveData<>();
+        attachedSubject = new MutableLiveData<>();
+        //canceledSubject = new MutableLiveData<>();
         allowMultipleImages = false;
         imageSource = source;
         requestPickImage();
-        return publishSubject.takeUntil(canceledSubject);
+        //return publishSubject.takeUntil(canceledSubject);
+        return publishSubject;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public Observable<List<Uri>> requestMultipleImages() {
-        publishSubjectMultipleImages = PublishSubject.create();
-        attachedSubject = PublishSubject.create();
-        canceledSubject = PublishSubject.create();
+    public LiveData<List<Uri>> requestMultipleImages() {
+        publishSubjectMultipleImages = new MutableLiveData<>();
+        attachedSubject = new MutableLiveData<>();
+        //canceledSubject = new MutableLiveData<>();
         imageSource = Sources.GALLERY;
         allowMultipleImages = true;
         requestPickImage();
-        return publishSubjectMultipleImages.takeUntil(canceledSubject);
+        //return publishSubjectMultipleImages.takeUntil(canceledSubject);
+        return publishSubjectMultipleImages;
     }
 
     @Override
@@ -86,15 +93,15 @@ public class RxImagePicker extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        attachedSubject.onNext(true);
-        attachedSubject.onComplete();
+        attachedSubject.setValue(true);
+        //attachedSubject.onComplete();
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        attachedSubject.onNext(true);
-        attachedSubject.onComplete();
+        attachedSubject.setValue(true);
+        //attachedSubject.onComplete();
     }
 
     @Override
@@ -116,7 +123,9 @@ public class RxImagePicker extends Fragment {
                     break;
             }
         } else {
-            canceledSubject.onNext(requestCode);
+           // canceledSubject.setValue(requestCode);
+            onImagesPicked(null);
+            onImagePicked(null);
         }
     }
 
@@ -139,12 +148,24 @@ public class RxImagePicker extends Fragment {
 
     private void requestPickImage() {
         if (!isAdded()) {
-            attachedSubject.subscribe(new Consumer<Boolean>() {
+           /* attachedSubject.subscribe(new Consumer<Boolean>() {
                 @Override
                 public void accept(Boolean attached) throws Exception {
                     pickImage();
                 }
+            });*/
+            attachedSubject.observe(this, new Observer<Boolean>() {
+                @Override
+                public void onChanged(@Nullable Boolean added) {
+
+                    if (added != null && added) {
+                        attachedSubject.removeObserver(this);
+                        pickImage();
+                    }
+                }
             });
+
+
         } else {
             pickImage();
         }
@@ -204,15 +225,15 @@ public class RxImagePicker extends Fragment {
 
     private void onImagesPicked(List<Uri> uris) {
         if (publishSubjectMultipleImages != null) {
-            publishSubjectMultipleImages.onNext(uris);
-            publishSubjectMultipleImages.onComplete();
+            publishSubjectMultipleImages.setValue(uris);
+           // publishSubjectMultipleImages.onComplete();
         }
     }
 
     private void onImagePicked(Uri uri) {
         if (publishSubject != null) {
-            publishSubject.onNext(uri);
-            publishSubject.onComplete();
+            publishSubject.setValue(uri);
+            //publishSubject.onComplete();
         }
     }
 

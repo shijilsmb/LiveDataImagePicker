@@ -1,5 +1,7 @@
 package com.mlsdev.sample;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Transformations;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
@@ -16,7 +18,6 @@ import com.mlsdev.rximagepicker.Sources;
 
 import java.io.File;
 
-import io.reactivex.Observable;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,6 +40,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void pickImageFromSource(Sources source) {
+
+        LiveData userName = Transformations.map(RxImagePicker.with(getSupportFragmentManager()).requestImage(source), uri -> {
+
+            switch (converterRadioGroup.getCheckedRadioButtonId()) {
+                case R.id.radio_file:
+                    return RxImageConverters.uriToFile(MainActivity.this, uri, createTempFile());
+                case R.id.radio_bitmap:
+                    return RxImageConverters.uriToBitmap(MainActivity.this, uri);
+                default:
+                    return uri;
+            }
+        });
+
+        userName.observe(this, this::onImagePicked);
+    }
+
+   /* private void pickImageFromSourceold(Sources source) {
         RxImagePicker.with(getFragmentManager()).requestImage(source)
                 .flatMap(uri -> {
                     switch (converterRadioGroup.getCheckedRadioButtonId()) {
@@ -51,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .subscribe(this::onImagePicked, throwable -> Toast.makeText(MainActivity.this, String.format("Error: %s", throwable), Toast.LENGTH_LONG).show());
-    }
+    }*/
 
     private void onImagePicked(Object result) {
         Toast.makeText(this, String.format("Result: %s", result), Toast.LENGTH_LONG).show();
@@ -68,5 +86,4 @@ public class MainActivity extends AppCompatActivity {
     private File createTempFile() {
         return new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), System.currentTimeMillis() + "_image.jpeg");
     }
-
 }

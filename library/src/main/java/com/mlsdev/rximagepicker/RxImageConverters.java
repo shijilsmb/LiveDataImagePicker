@@ -12,16 +12,33 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.schedulers.Schedulers;
 
 public class RxImageConverters {
 
-    public static Observable<File> uriToFile(final Context context, final Uri uri, final File file) {
+    public static File uriToFile(final Context context, final Uri uri, final File file) {
+
+        try {
+            InputStream inputStream = context.getContentResolver().openInputStream(uri);
+            copyInputStreamToFile(inputStream, file);
+            return file;
+        } catch (Exception e) {
+            Log.e(RxImageConverters.class.getSimpleName(), "Error converting uri", e);
+            return null;
+        }
+
+    }
+
+    public static Bitmap uriToBitmap(final Context context, final Uri uri) {
+        try {
+            return MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
+
+        } catch (IOException e) {
+            Log.e(RxImageConverters.class.getSimpleName(), "Error converting uri", e);
+            return null;
+        }
+    }
+    /*
+     public static Observable<File> uriToFile(final Context context, final Uri uri, final File file) {
         return Observable.create(new ObservableOnSubscribe<File>() {
             @Override
             public void subscribe(@NonNull ObservableEmitter<File> emitter) throws Exception {
@@ -37,8 +54,7 @@ public class RxImageConverters {
             }
         }).subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread());
     }
-
-    public static Observable<Bitmap> uriToBitmap(final Context context, final Uri uri) {
+    public static Observable<Bitmap> uriToBitmapold(final Context context, final Uri uri) {
         return Observable.create(new ObservableOnSubscribe<Bitmap>() {
             @Override
             public void subscribe(@NonNull ObservableEmitter<Bitmap> emitter) throws Exception {
@@ -52,7 +68,7 @@ public class RxImageConverters {
                 }
             }
         }).subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread());
-    }
+    }*/
 
     private static void copyInputStreamToFile(InputStream in, File file) throws IOException {
         OutputStream out = new FileOutputStream(file);

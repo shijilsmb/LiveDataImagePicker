@@ -2,8 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: "com.jfrog.bintray"
 
-def siteUrl = 'https://github.com/Frederikos/RxImagePicker'
-def gitUrl = 'https://github.com/Frederikos/RxImagePicker.git'
+def gitUrl = 'https://github.com/shijilsmb/LiveDataImagePicker.git'
 
 version = "2.1.5"
 group = "com.mlsdev.rximagepicker"
@@ -18,8 +17,8 @@ bintray {
     configurations = ['archives']
     pkg {
         repo = "maven"
-        name = "RxImagePicker"
-        websiteUrl = siteUrl
+        name = "LiveDataImagePicker"
+        //websiteUrl = siteUrl
         vcsUrl = gitUrl
         licenses = ["Apache-2.0"]
         publish = true
@@ -27,12 +26,12 @@ bintray {
 }
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.2'
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 15
         versionName "2.1.5"
     }
@@ -50,8 +49,8 @@ install {
         pom {
             project {
                 packaging 'aar'
-                name 'RxImagePicker an easy way to get image from Gallery or Camera with request runtime permission on Android M. Using RxJava'
-                url siteUrl
+                name 'LiveDataImagePicker an easy way to get image from Gallery or Camera with request runtime permission on Android M. Using LiveData'
+                //url siteUrl
                 licenses {
                     license {
                         name 'The Apache Software License, Version 2.0'
@@ -68,7 +67,7 @@ install {
                 scm {
                     connection gitUrl
                     developerConnection gitUrl
-                    url siteUrl
+                   // url siteUrl
 
                 }
             }
@@ -77,10 +76,13 @@ install {
 }
 
 dependencies {
-    implementation 'com.android.support:appcompat-v7:27.1.1'
-    api 'io.reactivex.rxjava2:rxandroid:2.0.2'
-    api 'io.reactivex.rxjava2:rxjava:2.1.16'
-    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'android.arch.lifecycle:extensions:1.1.1'
+    annotationProcessor 'android.arch.lifecycle:compiler:1.1.1'
+   // testImplementation 'junit:junit:4.12'
+
+    //api 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    //api 'io.reactivex.rxjava2:rxjava:2.1.16'
 }
 
 task sourcesJar(type: Jar) {
